@@ -1,5 +1,5 @@
 # python "D:\python\ping monitor\main.py"
-import os, time, threading
+import os, time, threading, pprint
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -43,6 +43,33 @@ def ping_device(ip):
 	res=os.popen('ping -n 1 "'+ip+'"')
 	res=res.readlines()
 	status[ip]=res[2]
+def write_status(credentials):
+	service = build("sheets", "v4", credentials=credentials)
+	sheets = service.spreadsheets()
+	values=[]
+	for x in status.values():
+		temp=[x]
+		print(x)
+		print(type(x))
+		values.append(temp)
+	print('values:')
+	print(values)
+	try:
+		data = [
+		{
+			'range': 'Sheet1!C2:C41',
+			'values' : values
+		}]
+		result=sheets.values().batchUpdate(
+			spreadsheetId=SPREADSHEET_ID, body={
+			'valueInputOption' : 'USER_ENTERED',
+			'data' : data
+			}).execute()
+		print('update succeeded')
+		print(f"{(result.get('totalUpdatedCells'))} cells updated.")
+		return result
+	except HttpError as error:
+		print(f"An error occurred: {error}")
 	
 def main():
 	credentials = manage_credentials()
@@ -51,14 +78,40 @@ def main():
 	    print(key, ' : ', value)
 	print('pinging devices...')
 	t=[None]*10
-	sttindex, sttcount, sttstart=0
+	sttindex= sttcount= sttstart=0
 	while True:
 		if(sttindex==len(status)):
 			sttindex=0
-		t[count]=threading.Thread(target=ping_device, args=(ip[index],))
-		t[count].start()
+		sttcount=sttcount+1
+		print('sttindex = '+str(sttindex))
+		print('sttcount = '+str(sttcount))
+		print('sttstart = '+str(sttstart))
+		print()
+		print("\t\t\t")
+		t[sttcount-1]=threading.Thread(target=ping_device, args=(list(status)[sttindex],))
+		t[sttcount-1].start()
 		if (sttcount==10):
-			if(sttstart<sttindex+1)
+			# if(sttstart>sttindex+1):
+			# 	for x in range(sttstart,len(status)):
+			# 		print('x = '+str(x))
+			# 		t[x].join()
+			# 	for x in range(0,sttindex+1):
+			# 		print('x = '+str(x))
+			# 		t[x].join()
+			# else:
+			# 	for x in range(sttstart,sttindex+1):
+					# print('x = '+str(x))
+					# t[x].join()
+			for x in range(10):
+				print('x = '+str(x))
+				t[x].join()
+			write_status(credentials)
+			sttstart=sttindex+1
+			sttcount=0
+			print(status)
+			input()
+
+		sttindex=sttindex+1
 		# for x in range(len(values)):
 		# 	t.append(threading.Thread(target=ping_device, args=(ip[x],)))
 			# response = os.popen('ping -n 1 "'+values[x]+'"')

@@ -1,38 +1,35 @@
 # python "D:\python\ping monitor\main.py"
-import os, time, threading, pprint
+import os, time, threading
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-SPREADSHEET_ID = "1hLasmmdhGmKKVeVV1a680IZNVJMWeVo_ep8u2evvUpk" # yang asli
-# SPREADSHEET_ID = "17wZNfmvI1ihVVHiuRdNMIrAPgwOtRS4K" # schedule it
+SPREADSHEET_ID = "1hLasmmdhGmKKVeVV1a680IZNVJMWeVo_ep8u2evvUpk"
 credentials = None
 status={}
+def read_settings():
+
 def manage_credentials():
+	global credentials
 	print('managing credentials...')
-	if os.path.exists("C:/Users/PHBC - 2/Downloads/ping monitor/ping monitor/token.json"):#opis
-	# if os.path.exists("D:/python/ping monitor/token.json"):#rumah
-		credentials = Credentials.from_authorized_user_file("C:/Users/PHBC - 2/Downloads/ping monitor/ping monitor/token.json", SCOPES)#opis
-		# credentials = Credentials.from_authorized_user_file("D:/python/ping monitor/ping monitor/token.json", SCOPES)#rumah
+	if os.path.exists("D:/python/ping monitor/token.json"):
+		credentials = Credentials.from_authorized_user_file("D:/python/ping monitor/token.json", SCOPES)
 	if not credentials or not credentials.valid:
 		if credentials and credentials.expired and credentials.refresh_token:
 			credentials.refresh(Request())
 		else:
-			flow = InstalledAppFlow.from_client_secrets_file("C:/Users/PHBC - 2/Downloads/ping monitor/ping monitor/credentials.json", SCOPES)#opis
-			# flow = InstalledAppFlow.from_client_secrets_file("D:/python/ping monitor/credentials.json", SCOPES)#rumah
+			flow = InstalledAppFlow.from_client_secrets_file("D:/python/ping monitor/credentials.json", SCOPES)
 			credentials = flow.run_local_server(port=0)
-		with open("C:/Users/PHBC - 2/Downloads/ping monitor/ping monitor/token.json", "w") as token:#opis
-		# with open("D:/python/ping monitor/token.json", "w") as token:#rumah
+		with open("D:/python/ping monitor/token.json", "w") as token:
 			token.write(credentials.to_json())
-	return credentials
 def read_ip(credentials):
 	print('calling data from archive...')
 	try:
 		service = build("sheets", "v4", credentials=credentials)
 		sheets = service.spreadsheets()
-		result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!B2:B41").execute() #yang asli---------
+		result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!B2:B41").execute()
 		values = result.get("values",[])
 		for x in range(len(values)):
 			status[values[x][0]]=None
@@ -41,8 +38,9 @@ def read_ip(credentials):
 	return status
 def ping_device(ip):
 	res=os.popen('ping -n 1 "'+ip+'"')
-	res=res.readlines()
-	status[ip]=res[2]
+	res=res.readlines()[2]
+	res=res[:len(res)-1]
+	status[ip]=res
 def write_status(credentials):
 	service = build("sheets", "v4", credentials=credentials)
 	sheets = service.spreadsheets()
@@ -70,9 +68,9 @@ def write_status(credentials):
 		return result
 	except HttpError as error:
 		print(f"An error occurred: {error}")
-	
 def main():
-	credentials = manage_credentials()
+	# if read_settings():
+	manage_credentials()
 	status=read_ip(credentials)
 	for key, value in status.items():
 	    print(key, ' : ', value)
@@ -91,17 +89,6 @@ def main():
 		t[sttcount-1]=threading.Thread(target=ping_device, args=(list(status)[sttindex],))
 		t[sttcount-1].start()
 		if (sttcount==10):
-			# if(sttstart>sttindex+1):
-			# 	for x in range(sttstart,len(status)):
-			# 		print('x = '+str(x))
-			# 		t[x].join()
-			# 	for x in range(0,sttindex+1):
-			# 		print('x = '+str(x))
-			# 		t[x].join()
-			# else:
-			# 	for x in range(sttstart,sttindex+1):
-					# print('x = '+str(x))
-					# t[x].join()
 			for x in range(10):
 				print('x = '+str(x))
 				t[x].join()
@@ -109,31 +96,6 @@ def main():
 			sttstart=sttindex+1
 			sttcount=0
 			print(status)
-			input()
-
 		sttindex=sttindex+1
-		# for x in range(len(values)):
-		# 	t.append(threading.Thread(target=ping_device, args=(ip[x],)))
-			# response = os.popen('ping -n 1 "'+values[x]+'"')
-			# a = response.readlines()
-			# print(a[2])
-
-
-
-			# if(status[x]!=a[2]):
-			# status[x]=a[2]
-			# sheets.values().update(spreadsheetId=SPREADSHEET_ID, range="Sheet1!C"+str(x+2), valueInputOption='USER_ENTERED', body={'values':[[a[2]]]}).execute()
-	# row=1;
-	# body={}
-	# while True:
-	# 	values=[]
-	# 	temp=[]
-	# 	for i in range(10):
-	# 		temp.append(str(row))
-	# 	values.append(temp)
-	# 	body={'values':values}
-	# 	sheets.values().update(spreadsheetId=SPREADSHEET_ID, range="Sheet1!F"+str(row)+":O"+str(row), valueInputOption='USER_ENTERED', body=body).execute()
-	# 	time.sleep(1)
-	# 	row=row+1
 if __name__ == "__main__":
 	main()

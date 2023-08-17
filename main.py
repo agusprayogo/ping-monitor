@@ -9,7 +9,8 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 SPREADSHEET_ID = "1hLasmmdhGmKKVeVV1a680IZNVJMWeVo_ep8u2evvUpk"
 credentials = None
 status={}
-def read_settings():
+sttindex=0
+# def read_settings():
 
 def manage_credentials():
 	global credentials
@@ -24,7 +25,9 @@ def manage_credentials():
 			credentials = flow.run_local_server(port=0)
 		with open("D:/python/ping monitor/token.json", "w") as token:
 			token.write(credentials.to_json())
-def read_ip(credentials):
+def read_ip():
+	global credentials
+	global status
 	print('calling data from archive...')
 	try:
 		service = build("sheets", "v4", credentials=credentials)
@@ -41,21 +44,28 @@ def ping_device(ip):
 	res=res.readlines()[2]
 	res=res[:len(res)-1]
 	status[ip]=res
-def write_status(credentials):
+def write_status():
+	global credentials
+	global sttindex
+	range='Sheet1C'+str(sttindex+2)+':D'+str(sttindex+12)
 	service = build("sheets", "v4", credentials=credentials)
 	sheets = service.spreadsheets()
 	values=[]
+	count=0
 	for x in status.values():
-		temp=[x]
-		print(x)
-		print(type(x))
+		if(count>=sttindex-10 and count<=sttindex):
+			temp=[x,time.ctime()]
+		else:
+			temp=[x,None]
 		values.append(temp)
+		count=count+1
 	print('values:')
 	print(values)
 	try:
 		data = [
 		{
-			'range': 'Sheet1!C2:C41',
+			'range': 'Sheet1!C2:D41',
+			# 'range': 'Sheet1C'+str(sttindex+2)+':D'+str(sttindex+12),
 			'values' : values
 		}]
 		result=sheets.values().batchUpdate(
@@ -69,9 +79,10 @@ def write_status(credentials):
 	except HttpError as error:
 		print(f"An error occurred: {error}")
 def main():
+	global sttindex
 	# if read_settings():
 	manage_credentials()
-	status=read_ip(credentials)
+	read_ip()
 	for key, value in status.items():
 	    print(key, ' : ', value)
 	print('pinging devices...')
@@ -92,7 +103,7 @@ def main():
 			for x in range(10):
 				print('x = '+str(x))
 				t[x].join()
-			write_status(credentials)
+			write_status()
 			sttstart=sttindex+1
 			sttcount=0
 			print(status)

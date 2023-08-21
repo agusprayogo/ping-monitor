@@ -6,10 +6,12 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-SPREADSHEET_ID = "1hLasmmdhGmKKVeVV1a680IZNVJMWeVo_ep8u2evvUpk"
+SPREADSHEET_ID = "1Aqfni6JAQI6xViilnB1hzYaFig-2BB6EoNZmA6-oAqs"
 credentials = None
-status={}
+status=[]
 sttindex=0
+ip=[]
+availability=[]
 # def read_settings():
 
 def manage_credentials():
@@ -25,20 +27,23 @@ def manage_credentials():
 			credentials = flow.run_local_server(port=0)
 		with open("D:/python/ping monitor/token.json", "w") as token:
 			token.write(credentials.to_json())
-def read_ip():
+def read_data():
 	global credentials
-	global status
+	global ip
 	print('calling data from archive...')
 	try:
 		service = build("sheets", "v4", credentials=credentials)
 		sheets = service.spreadsheets()
-		result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!B2:B41").execute()
+		result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Copy of List WS & Prnt Simphony!B4:K106").execute()
 		values = result.get("values",[])
-		for x in range(len(values)):
-			status[values[x][0]]=None
+		for x in values:
+			if(len(x)==0):
+		# for x in values:
+		# 	print(x[0]+' and '+x[9])
+		# for x in range(len(values)):
+		# 	ip.append(values[x][0])
 	except HttpError as error:
 		print(error)
-	return status
 def ping_device(ip):
 	res=os.popen('ping -n 1 "'+ip+'"')
 	res=res.readlines()[2]
@@ -47,7 +52,7 @@ def ping_device(ip):
 def write_status():
 	global credentials
 	global sttindex
-	range='Sheet1C'+str(sttindex+2)+':D'+str(sttindex+12)
+	# range='Sheet1C'+str(sttindex+2)+':D'+str(sttindex+12)
 	service = build("sheets", "v4", credentials=credentials)
 	sheets = service.spreadsheets()
 	values=[]
@@ -64,7 +69,7 @@ def write_status():
 	try:
 		data = [
 		{
-			'range': 'Sheet1!C2:D41',
+			'range': 'Copy of List WS & Prnt Simphony!L4:M106',
 			# 'range': 'Sheet1C'+str(sttindex+2)+':D'+str(sttindex+12),
 			'values' : values
 		}]
@@ -82,23 +87,24 @@ def main():
 	global sttindex
 	# if read_settings():
 	manage_credentials()
-	read_ip()
-	for key, value in status.items():
-	    print(key, ' : ', value)
+	read_data()
+	print('ini daftar ip')
+	for x in ip:
+		print(x)
 	print('pinging devices...')
 	t=[None]*10
-	sttindex= sttcount= sttstart=0
+	ipindex = ipcount= ipstart=0
 	while True:
-		if(sttindex==len(status)):
-			sttindex=0
-		sttcount=sttcount+1
-		print('sttindex = '+str(sttindex))
-		print('sttcount = '+str(sttcount))
-		print('sttstart = '+str(sttstart))
+		if(ipindex==len(status)):
+			ipindex=0
+		ipcount=ipcount+1
+		print('ipindex = '+str(ipindex))
+		print('ipcount = '+str(ipcount))
+		print('ipstart = '+str(ipstart))
 		print()
 		print("\t\t\t")
-		t[sttcount-1]=threading.Thread(target=ping_device, args=(list(status)[sttindex],))
-		t[sttcount-1].start()
+		t[ipcount-1]=threading.Thread(target=ping_device, args=(ip[ipindex],))
+		t[ipcount-1].start()
 		if (sttcount==10):
 			for x in range(10):
 				print('x = '+str(x))

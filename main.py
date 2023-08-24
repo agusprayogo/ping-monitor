@@ -98,7 +98,7 @@ def write_status():
 def main():
 	global ipindex
 	global data
-	threadcount=input('masukkan jumlah thread : ')
+	threadcount=int(input('masukkan jumlah thread : '))
 	loopcount=0
 	# if read_settings():
 	manage_credentials()
@@ -109,19 +109,26 @@ def main():
 	print('pinging devices...')
 	t=[None]*threadcount
 	ipindex = ipcount = ipstart = dataindex = 0
-	print('start at :' end='')
+	print('start at :', end='')
 	timestart=time.time()
 	print(datetime.fromtimestamp(timestart))
 	while True:
 		print('\t\t\tloopcount = ', end='')
 		print(loopcount)
-		if(loopcount==10):
+		if(loopcount==3):
 			print('test done')
-			print('stop at  : ' end='')
-			print()
+			print('start at : ', end='')
+			print(datetime.fromtimestamp(timestart))
+			print('stop at  : ', end='')
+			timestop=time.time()
+			print(datetime.fromtimestamp(timestop))
+			length=timestop-timestart
+			print('length   : ', end='')
+			print(datetime.fromtimestamp(length))
 			break
 		if(dataindex==len(data)):
 			dataindex=0
+			loopcount=loopcount+1
 		if(ipindex==totalnetto):
 			ipindex=0
 		print('ipindex   = '+str(ipindex))
@@ -148,7 +155,6 @@ def main():
 			ipstart=ipindex
 			ipcount=0
 			for x in status:
-				print(x)
-		loopcount=loopcount+1		
+				print(x)		
 if __name__ == "__main__":
 	main()

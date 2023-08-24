@@ -99,7 +99,7 @@ def main():
 	global ipindex
 	global data
 	threadcount=int(input('masukkan jumlah thread : '))
-	loopcount=0
+	# loopcount=0
 	# if read_settings():
 	manage_credentials()
 	read_data()
@@ -109,26 +109,26 @@ def main():
 	print('pinging devices...')
 	t=[None]*threadcount
 	ipindex = ipcount = ipstart = dataindex = 0
-	print('start at :', end='')
-	timestart=time.time()
-	print(datetime.fromtimestamp(timestart))
+	# print('start at :', end='')
+	# timestart=time.time()
+	# print(datetime.fromtimestamp(timestart))
 	while True:
-		print('\t\t\tloopcount = ', end='')
-		print(loopcount)
-		if(loopcount==3):
-			print('test done')
-			print('start at : ', end='')
-			print(datetime.fromtimestamp(timestart))
-			print('stop at  : ', end='')
-			timestop=time.time()
-			print(datetime.fromtimestamp(timestop))
-			length=timestop-timestart
-			print('length   : ', end='')
-			print(datetime.fromtimestamp(length))
-			break
+		# print('\t\t\tloopcount = ', end='')
+		# print(loopcount)
+		# if(loopcount==3):
+		# 	print('test done')
+		# 	print('start at : ', end='')
+		# 	print(datetime.fromtimestamp(timestart))
+		# 	print('stop at  : ', end='')
+		# 	timestop=time.time()
+		# 	print(datetime.fromtimestamp(timestop))
+		# 	length=timestop-timestart
+		# 	print('length   : ', end='')
+		# 	print(datetime.fromtimestamp(length))
+		# 	break
 		if(dataindex==len(data)):
 			dataindex=0
-			loopcount=loopcount+1
+			# loopcount=loopcount+1
 		if(ipindex==totalnetto):
 			ipindex=0
 		print('ipindex   = '+str(ipindex))

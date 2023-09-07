@@ -33,16 +33,18 @@ def read_data():
 	global data
 	global status
 	global totalnetto
+	global timestamp
 	print('calling data from archive...')
 	try:
 		service = build("sheets", "v4", credentials=credentials)
 		sheets = service.spreadsheets()
 		result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Copy of List WS & Prnt Simphony!B4:K106").execute()
 		data = result.get("values",[])
-		status=[None]*len(data)
+		status = [None]*len(data)
+		
 		print('len data')
 		print(len(data))
-		for x in range(len(data)):
+		for x in range(len(data)):#hapus kolom gk penting kek mac address, nama ws, dll
 			# print(x)
 			if(len(data[x])>1 and len(data[x])<=9):
 				del data[x][1:len(data[x])]
@@ -50,13 +52,22 @@ def read_data():
 			elif(len(data[x])>1 and len(data[x])<=10):
 				del data[x][1:9]
 				totalnetto=totalnetto+1
+		timestamp = [0]*len(data)
+		print('read data timestamp = ')
+		for x in timestamp:
+			print(x)
 	except HttpError as error:
 		print(error)
 def ping_device(ip, index):
+	global timestamp
 	res=os.popen('ping -n 1 "'+ip+'"')
 	res=res.readlines()[2]
 	res=res[:len(res)-1]
 	status[index]=res
+	timestamp[index]=time.time()
+	print('timestamp  = ')
+	for x in timestamp:
+		print(x)
 def write_status():
 	global credentials
 	global ipindex
@@ -65,19 +76,34 @@ def write_status():
 	service = build("sheets", "v4", credentials=credentials)
 	sheets = service.spreadsheets()
 	values=[]
-	count=0
-	for x in status:
-		temp=[x]
-		values.append(temp)
-	# for x in status.values():
-	# 	if(count>=ipindex-10 and count<=ipindex):
-	# 		temp=[x,time.ctime()]
-	# 	else:
-	# 		temp=[x,None]
+	# count=0
+	# timestamp=[]
+	# for x in status:
+	# 	temp=[x]
 	# 	values.append(temp)
-	# 	count=count+1
-	# print('values:')
-	# print(values)
+	timenow=time.time()
+	print('len timestamp = ',+len(timestamp))
+	print('len status    = ',+len(status))
+	for x in range(len(status)):
+		# print('timenow   = '+str(timenow))
+		# print(type(timenow))
+		# print('timestamp = '+str(timestamp[x]))
+		# print(type(timestamp[x]))
+		if(timestamp[x]!=0):
+			diff=int(round(timenow-timestamp[x]))
+			diff=100-diff
+			diff='=SPARKLINE('+str(diff)+',{"charttype","bar";"max",100;"min",0;"color1",IF('+str(diff)+'>70,"green",IF('+str(diff)+'>50,"yellow","red"))})'
+			temp=[status[x],diff]
+		else:
+			temp=[status[x],None]
+		# if(count>=ipindex-10 and count<=ipindex):
+		# 	temp=[x,time.ctime()]
+		# else:
+		# 	temp=[x,None]
+		values.append(temp)
+		# count=count+1
+	print('values:')
+	print(values)
 	try:
 		data = [
 		{
@@ -98,6 +124,7 @@ def write_status():
 def main():
 	global ipindex
 	global data
+	global timestamp
 	threadcount=int(input('masukkan jumlah thread : '))
 	# loopcount=0
 	# if read_settings():
